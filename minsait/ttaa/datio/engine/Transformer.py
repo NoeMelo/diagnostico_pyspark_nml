@@ -8,12 +8,12 @@ from minsait.ttaa.datio.utils.Writer import Writer
 
 
 class Transformer(Writer):
-    def __init__(self, spark: SparkSession, validation):
+    def __init__(self, spark: SparkSession):
         self.spark: SparkSession = spark
         df: DataFrame = self.read_input()
         df.printSchema()
         df = self.clean_data(df)
-        df = self.age_validation(df,validation) #ejercicio 5
+        df = self.age_validation(df,AGE_VALIDATION) #ejercicio 5
         df = self.column_selection(df) #ejercicio 1
         df = self.add_player_cat(df) #ejercicio 2
         df = self.add_potential_vs_overall(df) #ejercicio 3
@@ -142,18 +142,20 @@ class Transformer(Writer):
             Si player_cat es C y potential_vs_overall es superior a 1.15
             Si player_cat es D y potential_vs_overall es superior a 1.25
         """
+        try: #validacion del filtro
+            df = df.filter(
+                playerCat.column().isin(["A","B"]) \
+                | ((playerCat.column() == 'C') & (potentialVsOverall.column() > 1.15 )) \
+                | ((playerCat.column() == 'D') & (potentialVsOverall.column() > 1.25 )) 
+                )
+        except Exception as e:
+            raise Exception(e)
 
-        df = df.filter(
-            playerCat.column().isin(["A","B"]) \
-            | ((playerCat.column() == 'C') & (potentialVsOverall.column() > 1.15 )) \
-            | ((playerCat.column() == 'D') & (potentialVsOverall.column() > 1.25 )) 
-            )
-        
         return df
 
     def age_validation(self, df: DataFrame, validation) -> DataFrame:
         """
-        :param df: is a DataFrame with players information (must have all columns)
+        :param df: is a DataFrame with players information (must have all columns and validation)
         :return: select df by validation
             de ser 1 realice todos los pasos únicamente para los jugadores menores de 23 años 
             y en caso de ser 0 que lo haga con todos los jugadores del dataset.
@@ -163,7 +165,8 @@ class Transformer(Writer):
             
             df = df.filter(age.column() < 23)
             return df
-
-        if validation == 0:
+        elif validation == 0:
             
             return df
+        else:
+            raise Exception("Valor inválido para la validación de edad, los valores esperados son 1 o 0")
