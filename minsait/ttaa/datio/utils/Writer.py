@@ -3,12 +3,12 @@ from pyspark.sql import DataFrame
 from minsait.ttaa.datio.common.Constants import *
 from minsait.ttaa.datio.common.naming.PlayerInput import *
 
-
+#ejercicio 6
 class Writer:
     def write(self, df: DataFrame):
         df \
-            .coalesce(2) \
+            .coalesce(1) \
             .write \
-            .partitionBy(team_position.name) \
+            .partitionBy(nationality.name) \
             .mode(OVERWRITE) \
             .parquet(OUTPUT_PATH);
